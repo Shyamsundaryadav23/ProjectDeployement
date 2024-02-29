@@ -1,0 +1,8 @@
+.parent{
+    background-color: gray;
+    height: 500px;
+    
+}
+.child{
+    background-color: yellowgreen;
+}
