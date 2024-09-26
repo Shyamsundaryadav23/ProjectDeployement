@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Calculator</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #121212;
+            font-family: 'Roboto', sans-serif;
+            padding: 10px;
+        }
+
+        .calculator {
+            width: 100%;
+            max-width: 400px;
+            background-color: #ededed;
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(20, 19, 19, 0.6);
+            padding: 20px;
+        }
+
+        .calculator__display {
+            font-size: 3rem;
+            color: white;
+            background-color: #1c1c1c;
+            text-align: right;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+
+        .calculator__keys {
+            display: grid;
+            grid-template-columns: repeat(4, 2fr);
+            grid-gap: 10px;
+        }
+
+        button {
+            font-size: 1.6rem;
+            background-color: #0dbdb1;
+            color: rgb(1, 1, 1);
+            border: none;
+            padding: 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #444;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        button:active {
+            background-color: #555;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.4);
+        }
+
+        button[data-action="add"],
+        button[data-action="subtract"],
+        button[data-action="multiply"],
+        button[data-action="divide"] {
+            background-color: #09bfdb;
+        }
+
+        button[data-action="add"]:hover,
+        button[data-action="subtract"]:hover,
+        button[data-action="multiply"]:hover,
+        button[data-action="divide"]:hover {
+            background-color: #fb8c00;
+        }
+
+        button[data-action="clear"],
+        button[data-action="calculate"] {
+            background-color: #b8ed86;
+        }
+
+        button[data-action="clear"]:hover,
+        button[data-action="calculate"]:hover {
+            background-color: #e53935;
+        }
+
+        button[data-action="decimal"] {
+            background-color: #2261ff;
+            font-size: 30px;
+        }
+
+        button[data-action="decimal"]:hover {
+            background-color: #9b59b6;
+        }
+
+        .key--equal {
+            grid-column: span 3;
+        }
+
+        button:nth-child(15) {
+            grid-column: span 2;
+        }
+
+        @media (max-width: 600px) {
+            .calculator {
+                max-width: 100%;
+            }
+
+            .calculator__display {
+                font-size: 2.5rem;
+            }
+
+            button {
+                font-size: 1.4rem;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div class="calculator__display">0</div>
+        <div class="calculator__keys">
+            <button data-action="clear">AC</button>
+            <button>7</button>
+            <button>8</button>
+            <button>9</button>
+            <button data-action="divide">÷</button>
+            <button>4</button>
+            <button>5</button>
+            <button>6</button>
+            <button data-action="multiply">*</button>
+            <button>1</button>
+            <button>2</button>
+            <button>3</button>
+            <button data-action="subtract">-</button>
+            <button>0</button>
+            <button data-action="decimal"><b>.</b></button>
+            <button data-action="add">+</button>
+            <button class="key--equal" data-action="calculate">=</button>
+        </div>
+    </div>
+
+   <script>
+        const calculator = document.querySelector('.calculator');
+        const keys = calculator.querySelector('.calculator__keys');
+        const display = calculator.querySelector('.calculator__display');
+
+        keys.addEventListener('click', e => {
+            if (e.target.matches('button')) {
+                const key = e.target;
+                const action = key.dataset.action;
+                const keyContent = key.textContent;
+                const displayedNum = display.textContent;
+                const previousKeyType = calculator.dataset.previousKeyType;
+
+                if (!action) {
+                    if (displayedNum === '0' || previousKeyType === 'operator' || previousKeyType === 'calculate') {
+                        display.textContent = keyContent;
+                    } else {
+                        display.textContent = displayedNum + keyContent;
+                    }
+                    calculator.dataset.previousKeyType = 'number';
+                }
+
+                if (action === 'decimal') {
+                    if (!displayedNum.includes('.')) {
+                        display.textContent = displayedNum + '.';
+                    } else if (previousKeyType === 'operator' || previousKeyType === 'calculate') {
+                        display.textContent = '0.';
+                    }
+                    calculator.dataset.previousKeyType = 'decimal';
+                }
+
+                if (action === 'add' || action === 'subtract' || action === 'multiply' || action === 'divide') {
+                    const firstValue = calculator.dataset.firstValue;
+                    const operator = calculator.dataset.operator;
+                    const secondValue = displayedNum;
+
+                    if (firstValue && operator && previousKeyType !== 'operator' && previousKeyType !== 'calculate') {
+                        const calcValue = calculate(firstValue, operator, secondValue);
+                        display.textContent = calcValue;
+                        calculator.dataset.firstValue = calcValue;
+                    } else {
+                        calculator.dataset.firstValue = displayedNum;
+                    }
+
+                    key.classList.add('is-depressed');
+                    calculator.dataset.previousKeyType = 'operator';
+                    calculator.dataset.operator = action;
+                }
+
+                if (action === 'calculate') {
+                    let firstValue = calculator.dataset.firstValue;
+                    const operator = calculator.dataset.operator;
+                    const secondValue = displayedNum;
+
+                    if (firstValue) {
+                        if (previousKeyType === 'calculate') {
+                            firstValue = displayedNum;
+                        }
+                        display.textContent = calculate(firstValue, operator, secondValue);
+                    }
+
+                    calculator.dataset.previousKeyType = 'calculate';
+                }
+
+                if (action === 'clear') {
+                    if (key.textContent === 'AC') {
+                        calculator.dataset.firstValue = '';
+                        calculator.dataset.modValue = '';
+                        calculator.dataset.operator = '';
+                        calculator.dataset.previousKeyType = '';
+                    } else {
+                        key.textContent = 'AC';
+                    }
+
+                    display.textContent = 0;
+                    calculator.dataset.previousKeyType = 'clear';
+                }
+            }
+        });
+
+        const calculate = (n1, operator, n2) => {
+            let result = '';
+            n1 = parseFloat(n1);
+            n2 = parseFloat(n2);
+
+            if (operator === 'add') {
+                result = n1 + n2;
+            } else if (operator === 'subtract') {
+                result = n1 - n2;
+            } else if (operator === 'multiply') {
+                result = n1 * n2;
+            } else if (operator === 'divide') {
+                result = n1 / n2;
+            }
+
+            return result;
+        }
+    </script> 
+</body>
+</html>
